@@ -1,0 +1,38 @@
+name: 1_gpu_twins
+workdir: /
+resources:
+  cloud: aws
+  region: us-east-1
+  instance_type: g6e.xlarge
+  disk_size: 256
+  disk_tier: medium
+  image_id: ami-039d8fdf80135bdd3
+envs:
+  BASE_EBS_DIR: /mnt/ebs_volume
+  MODEL_BUCKET: rimon-models
+  MODEL_PATH: /mnt/ebs_volume/model/gemma-2-2b-it
+  OUTPUT_BUCKET: rimon-outputs
+  DATASET_BUCKET: rimon-datasets
+  DATASET_PATH: /mnt/ebs_volume/dataset/prompt_data/openhermes.json
+  OUTPUT_FOLDER: twin_openhermes_gemma_2_2b_it
+  OUTPUT_PATH: /mnt/ebs_volume/output/twin_openhermes_gemma_2_2b_it
+  SUBSET_START: -1
+  SUBSET_END: -1
+  TRAIN_TYPE: twins
+  BATCH_SIZE: 8
+  NUM_EPOCHS: 500
+setup: |
+  echo "Begin setup."
+
+  source activate pytorch
+  conda create -n ood_prompts python=3.10 -y
+  conda activate ood_prompts
+
+  sh scripts/setup_aws.sh
+
+  pip install -e .
+
+  echo "Setup complete."
+run: |
+  source activate ood_prompts
+  sh scripts/train_and_sync_aws.sh
